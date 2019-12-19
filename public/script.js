@@ -17,6 +17,12 @@ function fillQuestionElements(data) { //funkcja do podstawiania pytań i odpowie
         return;
     }
     
+    if(data.loser === true) {
+        gameBoard.style.display = 'none';
+        h2.innerText = 'Nie poszło tym razem!';
+        return;
+    }
+
     //question.innerHTML = data.question //przestroga, aby do podstawiania tekstu nei urzywać "innerHTML"
     question.innerText = data.question;
     answer1.innerText = data.answers[0];
@@ -45,6 +51,8 @@ function showNextQuestion() {
 
 showNextQuestion();
 
+//------------------------------------------------------------------------
+
 const goodAnswersSpan = document.querySelector('#good-answers');
 
 function handleAnswerFeedback(data) {
@@ -65,13 +73,99 @@ function sendAnswer(answerIndex) {
     });
 }
 
-const buttons = document.querySelectorAll('button');
+const buttons = document.querySelectorAll('.answer-btn');
 for(const button of buttons) {
     button.addEventListener('click', (event) => {
         const answerIndex = event.target.dataset.answer;
-        //console.log('przycisk', answerIndex);
+        console.log('przycisk', answerIndex);
         sendAnswer(answerIndex);
     })
 }
+
+//------------------------------------------------------------------------
+//Koło ratunkowe telefon
+const tip = document.querySelector('#tip');
+function handleFriendsAnswer(data) {
+    tip.innerText = data.text;
+}
+
+function callToFriend() {
+    console.log('elefon');
+    fetch(`/help/friend`, {
+        method: 'GET',
+    })
+    .then( r => r.json())
+    .then( data => {
+        console.log(data);
+        handleFriendsAnswer(data);
+    });
+}
+
+document.querySelector('#callToFriend').addEventListener('click', callToFriend);
+
+//------------------------------------------------------------------------
+//Kolo ratunkowe pół / pół
+function handleHalfOnHalf(data) {
+    if(typeof data.text === 'string') {
+        tip.innerText = data.text;
+    } else {
+        for(const button of buttons) {
+            if(data.answerToRemove.indexOf(button.innerText) > -1 ) { //jeżeli element istnieje w tej tablicy
+                button.innerText = '';
+            }
+        }
+    }
+}
+
+function halfOnHalf() {
+    //console.log('pol/pol');
+    fetch(`/help/half`, {
+        method: 'GET',
+    })
+    .then( r => r.json())
+    .then( data => {
+        console.log(data);
+        handleHalfOnHalf(data);
+    });
+}
+
+document.querySelector('#halfOnHalf').addEventListener('click', halfOnHalf);
+
+//------------------------------------------------------------------------
+//Pytanie do publiczności
+
+function handleQuestionToTheCrowd(data) {
+    console.log(data);
+    if(typeof data.text === 'string') {
+        tip.innerText = data.text;
+    } else {
+        //for(const percent of data.chart) {
+            //if(data.answerToRemove.indexOf(button.innerText) > -1 ) { //jeżeli element istnieje w tej tablicy
+            //    button.innerText = '';
+            //}
+        //}
+        data.chart.forEach((percent, index) => {
+            buttons[index].innerText = buttons[index].innerText + ': ' + percent + '%'
+        });
+    }
+}
+
+function questionToTheCrowd() {
+    //console.log('pol/pol');
+    fetch(`/help/crowd`, {
+        method: 'GET',
+    })
+    .then( r => r.json())
+    .then( data => {
+        //console.log(data);
+        handleQuestionToTheCrowd(data);
+    });
+}
+
+document.querySelector('#questionToTheCrowd').addEventListener('click', questionToTheCrowd);
+
+
+
+
 
 
